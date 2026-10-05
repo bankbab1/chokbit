@@ -1,6 +1,6 @@
 import type {GenerationRecord} from './recorder';
-const url=import.meta.env.VITE_SUPABASE_URL?.replace(/\/$/,'');
-const apiKey=import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const url=(import.meta.env.VITE_SUPABASE_URL||'https://lerfurnmnniecmreyzvt.supabase.co').replace(/\/$/,'');
+const apiKey=import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY||'sb_publishable_NpVDeqytv6kYyuFVQ28n1Q_Tzs0tLgJ';
 export const cloudConfigured=Boolean(url&&apiKey);
 const b64=(bytes:Uint8Array)=>btoa(Array.from(bytes,b=>String.fromCharCode(b)).join(''));
 const bytes=(s:string)=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
