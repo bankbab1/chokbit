@@ -4,7 +4,7 @@
 2. Create an email/password user in Authentication > Users. Public signup is not required; disable it for a personal collector.
 3. Copy `.env.example` to `.env.local` and set the project URL and publishable key. Never use a service-role or secret key in Vite.
 4. Run `npm install` and `npm run dev`, or rebuild with `npm run build` after setting the environment.
-5. Sign in in the Supabase recording panel with the account and a separate strong vault passphrase (at least 16 characters). Use the same vault passphrase across sessions. It is not the Supabase account password, and cannot be reset to recover old encrypted keys.
+5. Sign in using only the account email and password. The same password derives the encryption key for new records. Keep the original password to decrypt records if you later change your sign-in password. Records created with the earlier separate vault passphrase still require that original passphrase; no data is automatically re-encrypted.
 
 The client uses Supabase Auth and the PostgREST API. Sessions and vault credentials stay in memory. Refreshing requires sign-in again. Generation saves an initial checking row, then updates it with address results. Errors pause automatic generation. Recheck retries the same row UUID. Anonymous access is denied and RLS restricts rows to their owner.
 
