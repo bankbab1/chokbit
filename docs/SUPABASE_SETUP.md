@@ -1,0 +1,15 @@
+# Supabase setup
+
+1. Apply `supabase/migrations/202610050001_records.sql` in your project's SQL editor (or through Supabase migrations).
+2. Create an email/password user in Authentication > Users. Public signup is not required; disable it for a personal collector.
+3. Copy `.env.example` to `.env.local` and set the project URL and publishable key. Never use a service-role or secret key in Vite.
+4. Run `npm install` and `npm run dev`, or rebuild with `npm run build` after setting the environment.
+5. Sign in in the Supabase recording panel with the account and a separate strong vault passphrase (at least 16 characters). Use the same vault passphrase across sessions. It is not the Supabase account password, and cannot be reset to recover old encrypted keys.
+
+The client uses Supabase Auth and the PostgREST API. Sessions and vault credentials stay in memory. Refreshing requires sign-in again. Generation saves an initial checking row, then updates it with address results. Errors pause automatic generation. Recheck retries the same row UUID. Anonymous access is denied and RLS restricts rows to their owner.
+
+Key hex and compressed WIF use AES-256-GCM with a fresh 12-byte IV per write, a random 16-byte salt per session, PBKDF2-SHA256 with 600,000 iterations, and record UUID as authenticated data. Public addresses and lookup statistics are queryable plaintext. The encryption protects database contents, not a compromised browser or frontend.
+
+Exports select up to 5,000 rows per batch, decrypt locally, and download plaintext JSON as `rec_0000000001.json`, `rec_bl_1.json`, or `rec_tx_1.json`. Balance/TX series are filtered exports of the same rows, avoiding duplicate database storage. Export while automatic generation is stopped. Export filenames refer to the current filtered ordering, not immutable archive numbers. Keep exports out of public Git repositories.
+
+Before production, verify with two test users that neither can read or modify the other's records and that anonymous requests cannot access the table. Live Auth, RLS, and database integration must be checked against the configured project.
