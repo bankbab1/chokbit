@@ -35,3 +35,9 @@ The default `npm run build` uses `/` for other hosts. Only the generated `dist` 
 Enter a Gmail username or a full email address and password. Mobile password entry requests a numeric keyboard. Credentials and the session remain in memory; refreshing requires sign-in again. Logout is available in the top-right account menu when generation is idle.
 
 Private keys are encrypted before storage using the sign-in password. Keep the original password for older records if it changes. Public frontend Supabase configuration is in `.env.example`; never add account passwords or service-role keys to the repository. See [Supabase setup](docs/SUPABASE_SETUP.md).
+
+## Address variants
+
+New generations check five addresses: compressed and uncompressed P2PKH, compressed P2WPKH and nested P2SH-P2WPKH, and x-only P2TR. Uncompressed SegWit variants are not offered because standard relay policy requires compressed public keys. Taproot has no separate compressed/uncompressed address variants. Existing four-address records remain readable.
+
+`encrypted_secret` contains an AES-GCM ciphertext for the private key and compressed WIF, together with salt, IV, format version and PBKDF2 iteration count. There is no plaintext private-key database column. Use Generated Historical → Reveal key to decrypt a saved key in the browser.

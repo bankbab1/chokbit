@@ -1,13 +1,14 @@
 import * as btc from '@scure/btc-signer';
 import { secp256k1 } from '@noble/curves/secp256k1';
 export type Network = 'mainnet' | 'testnet';
-export const formats = ['P2PKH','P2WPKH','P2SH','P2TR'] as const;
+export const formats = ['P2PKH','P2WPKH','P2SH','P2TR','P2PKH uncompressed'] as const;
 export type Format = typeof formats[number];
 export const hex = (b: Uint8Array) => Array.from(b,x=>x.toString(16).padStart(2,'0')).join('');
 export function derive(key: Uint8Array, network: Network) {
  const n = network === 'mainnet' ? btc.NETWORK : btc.TEST_NETWORK;
  const pub = secp256k1.getPublicKey(key,true);
- return { key:hex(key), wif:btc.WIF(n).encode(key), pub:hex(pub), addresses: [btc.p2pkh(pub,n),btc.p2wpkh(pub,n),btc.p2sh(btc.p2wpkh(pub,n),n),btc.p2tr(pub.slice(1),undefined,n)].map((x,i)=>({format:formats[i],address:x.address!})) };
+ const pubUncompressed=secp256k1.getPublicKey(key,false);
+ return { key:hex(key), wif:btc.WIF(n).encode(key), pub:hex(pub), pubUncompressed:hex(pubUncompressed), addresses: [btc.p2pkh(pub,n),btc.p2wpkh(pub,n),btc.p2sh(btc.p2wpkh(pub,n),n),btc.p2tr(pub.slice(1),undefined,n),btc.p2pkh(pubUncompressed,n)].map((x,i)=>({format:formats[i],address:x.address!})) };
 }
 export function generate(network: Network) {return derive(btc.utils.randomPrivateKeyBytes(),network);}
 export const api = (n:Network) => n==='mainnet' ? 'https://blockstream.info/api' : 'https://blockstream.info/testnet/api';
