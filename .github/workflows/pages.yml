@@ -1,4 +1,4 @@
-name: Deploy GitHub Pages
+name: Validate GitHub Pages build
 on:
   push:
     branches: [main]
@@ -17,27 +17,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - name: Configure Pages
-        id: pages
-        uses: actions/configure-pages@v5
       - run: npm ci
       - name: Build Vite app
-        run: npm run build
-        env:
-          VITE_BASE_PATH: ${{ steps.pages.outputs.base_path }}/
-      - uses: actions/upload-pages-artifact@v4
-        with:
-          path: dist
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy
-        id: deployment
-        uses: actions/deploy-pages@v4
+        run: npm run build -- --mode github-pages
+      # GitHub Pages publishes main branch /docs; this workflow only validates.

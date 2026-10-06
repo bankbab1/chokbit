@@ -11,13 +11,13 @@ npm run dev
 
 ## GitHub Pages
 
-In repository **Settings → Pages → Build and deployment**, select **GitHub Actions** as the source. The included `.github/workflows/pages.yml` builds `dist` and deploys on pushes to `main`. For an existing repository, switch away from “Deploy from a branch” before running the workflow. The app uses hash navigation and the workflow sets the repository asset base automatically.
+In repository **Settings → Pages → Build and deployment**, select **Deploy from a branch**, branch **main**, folder **/docs**. The committed `docs/index.html` and `docs/assets` are the built app. The Actions workflow validates builds without competing with the branch deployment. Hash navigation works without server-side route rewrites.
 
 ```sh
-VITE_BASE_PATH=/chokbit/ npm run build
+npm run build -- --mode github-pages
 ```
 
-The default `npm run build` uses `/` for other hosts. Only the generated `dist` directory is served; TypeScript source is not a deployable website.
+Rebuild and commit the generated `/docs` files after source edits. This mode uses `/chokbit/` asset paths and preserves setup documentation in `/docs`. The default `npm run build` still uses `/` and outputs `dist` for other hosts. TypeScript source is not a deployable website.
 
 ## Structure
 
