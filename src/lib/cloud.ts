@@ -1,4 +1,5 @@
-import type {GenerationRecord} from './recorder';
+import {finishRecord,type GenerationRecord,type RecordResult} from './recorder';
+import {api,getJSON,type Activity} from './bitcoin';
 const url=(import.meta.env.VITE_SUPABASE_URL||'https://lerfurnmnniecmreyzvt.supabase.co').replace(/\/$/,'');
 const apiKey=import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY||'sb_publishable_NpVDeqytv6kYyuFVQ28n1Q_Tzs0tLgJ';
 export const cloudConfigured=Boolean(url&&apiKey);
@@ -27,6 +28,15 @@ export class CloudRecorder{
  if(options.address.trim())params.set('addresses',`cs.${JSON.stringify([{address:options.address.trim()}])}`);
  const rows=await this.request<HistoryRow[]>(`/rest/v1/generation_records?${params}`,{},true);
  return {rows:rows.slice(0,options.size),hasMore:rows.length>options.size};
+ }
+ async recheck(row:HistoryRow,signal:AbortSignal,onProgress:(done:number,total:number)=>void=()=>{}){
+ const results:RecordResult[]=[];
+ for(const address of row.addresses){signal.throwIfAborted();try{results.push({activity:await getJSON<Activity>(`${api(row.network)}/address/${address.address}`,signal)})}catch(e){signal.throwIfAborted();results.push({error:e instanceof Error?e.message:'Lookup failed'})}onProgress(results.length,row.addresses.length);}
+ signal.throwIfAborted();
+ const record={addresses:row.addresses.map(a=>({...a})),status:row.status} as GenerationRecord;finishRecord(record,results);
+ const params=new URLSearchParams({id:`eq.${row.id}`,owner_id:`eq.${this.owner}`,select:'*'});
+ const updated=await this.request<HistoryRow[]>(`/rest/v1/generation_records?${params}`,{method:'PATCH',headers:{Prefer:'return=representation'},body:JSON.stringify({addresses:record.addresses,status:record.status,has_balance:record.addresses.some(a=>(a.balanceConfirmedSats??0)>0||(a.balanceTotalSats??0)>0),has_transactions:record.addresses.some(a=>(a.txCount??0)>0)})},true);
+ if(updated.length!==1)throw new Error('Record was not updated. Refresh your history and try again.');return updated[0];
  }
  async reveal(row:HistoryRow){const key=await vaultKey(this.passphrase,bytes(row.encrypted_secret.salt));try{return await decryptSecret(row.id,row.encrypted_secret,key)}catch{throw new Error('This record uses a different encryption password or an earlier vault passphrase.')}}
 }
