@@ -11,7 +11,10 @@ export function derive(key: Uint8Array, network: Network) {
  return { key:hex(key), wif:btc.WIF(n).encode(key), pub:hex(pub), pubUncompressed:hex(pubUncompressed), addresses: [btc.p2pkh(pub,n),btc.p2wpkh(pub,n),btc.p2sh(btc.p2wpkh(pub,n),n),btc.p2tr(pub.slice(1),undefined,n),btc.p2pkh(pubUncompressed,n)].map((x,i)=>({format:formats[i],address:x.address!})) };
 }
 export function generate(network: Network) {return derive(btc.utils.randomPrivateKeyBytes(),network);}
-export const api = (n:Network) => n==='mainnet' ? 'https://blockstream.info/api' : 'https://blockstream.info/testnet/api';
+export const API_PROVIDERS = {blockstream:'Blockstream',mempool:'mempool.space'} as const;
+export type ApiProvider = keyof typeof API_PROVIDERS;
+export function savedProvider():ApiProvider {try{return localStorage.getItem('chokbit-api-provider')==='mempool'?'mempool':'blockstream'}catch{return 'blockstream'}}
+export const api = (n:Network,provider:ApiProvider='blockstream') => provider==='mempool' ? (n==='mainnet'?'https://mempool.space/api':'https://mempool.space/testnet/api') : (n==='mainnet' ? 'https://blockstream.info/api' : 'https://blockstream.info/testnet/api');
 export const explorer = (n:Network) => n==='mainnet' ? 'https://blockstream.info' : 'https://blockstream.info/testnet';
 export type Stats={funded_txo_sum:number;spent_txo_sum:number;tx_count:number};
 export type Activity={chain_stats:Stats;mempool_stats:Stats};

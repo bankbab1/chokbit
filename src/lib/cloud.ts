@@ -1,5 +1,5 @@
 import {finishRecord,type GenerationRecord,type RecordResult} from './recorder';
-import {api,getJSON,type Activity} from './bitcoin';
+import {api,getJSON,type Activity,type ApiProvider} from './bitcoin';
 const url=(import.meta.env.VITE_SUPABASE_URL||'https://lerfurnmnniecmreyzvt.supabase.co').replace(/\/$/,'');
 const apiKey=import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY||'sb_publishable_NpVDeqytv6kYyuFVQ28n1Q_Tzs0tLgJ';
 export const cloudConfigured=Boolean(url&&apiKey);
@@ -29,9 +29,9 @@ export class CloudRecorder{
  const rows=await this.request<HistoryRow[]>(`/rest/v1/generation_records?${params}`,{},true);
  return {rows:rows.slice(0,options.size),hasMore:rows.length>options.size};
  }
- async recheck(row:HistoryRow,signal:AbortSignal,onProgress:(done:number,total:number)=>void=()=>{}){
+ async recheck(row:HistoryRow,signal:AbortSignal,onProgress:(done:number,total:number)=>void=()=>{},provider:ApiProvider='blockstream'){
  const results:RecordResult[]=[];
- for(const address of row.addresses){signal.throwIfAborted();try{results.push({activity:await getJSON<Activity>(`${api(row.network)}/address/${address.address}`,signal)})}catch(e){signal.throwIfAborted();results.push({error:e instanceof Error?e.message:'Lookup failed'})}onProgress(results.length,row.addresses.length);}
+ for(const address of row.addresses){signal.throwIfAborted();try{results.push({activity:await getJSON<Activity>(`${api(row.network,provider)}/address/${address.address}`,signal)})}catch(e){signal.throwIfAborted();results.push({error:e instanceof Error?e.message:'Lookup failed'})}onProgress(results.length,row.addresses.length);}
  signal.throwIfAborted();
  const record={addresses:row.addresses.map(a=>({...a})),status:row.status} as GenerationRecord;finishRecord(record,results);
  const params=new URLSearchParams({id:`eq.${row.id}`,owner_id:`eq.${this.owner}`,select:'*'});
