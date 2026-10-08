@@ -3,12 +3,14 @@ import {API_PROVIDERS,type ApiProvider} from '../../lib/bitcoin';
 // Snapshot before updating: offset pagination would skip rows as complete records leave the filter.
 export async function retryIncomplete(client:Pick<CloudRecorder,'history'|'recheck'>,filters:{network:string;activity:string;address:string},provider:ApiProvider,signal:AbortSignal,onStatus:(message:string)=>void){
  const rows:HistoryRow[]=[];const seen=new Set<string>();
+ for(const status of ['incomplete','checking']){
  for(let page=1;;page++){
-  signal.throwIfAborted();const result=await client.history({...filters,status:'incomplete',page,size:50});signal.throwIfAborted();
+  signal.throwIfAborted();const result=await client.history({...filters,status,page,size:50});signal.throwIfAborted();
   for(const row of result.rows)if(!seen.has(row.id)){seen.add(row.id);rows.push(row)}
   if(!result.hasMore)break;
  }
- if(!rows.length){onStatus('No incomplete records match these filters.');return}
+ }
+ if(!rows.length){onStatus('No incomplete or checking records match these filters.');return}
  let done=0;
  for(const row of rows){
   signal.throwIfAborted();onStatus(`Record ${done+1}/${rows.length} · ${API_PROVIDERS[provider]}`);
