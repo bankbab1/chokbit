@@ -12,3 +12,11 @@ export function adjacentPrivateKey(input:string,direction:1|-1):string {
  if(value<1n||value>MAX_PRIVATE_KEY)throw new Error('No valid private key in this direction.');
  return value.toString(16).padStart(64,'0');
 }
+
+export function randomPrivateKeyInRange(start:string,end:string):Uint8Array {
+ parsePrivateKey(start);parsePrivateKey(end);const first=BigInt(`0x${start.trim()}`);const last=BigInt(`0x${end.trim()}`);
+ if(first>last)throw new Error('Start key must be less than or equal to end key.');
+ const span=last-first+1n;const bits=(span-1n).toString(2).length;const size=Math.ceil(bits/8);const mask=(1n<<BigInt(bits))-1n;
+ let value:bigint;do{const bytes=crypto.getRandomValues(new Uint8Array(size));value=BigInt('0x'+Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join(''))&mask;}while(value>=span);
+ return parsePrivateKey((first+value).toString(16).padStart(64,'0'));
+}
