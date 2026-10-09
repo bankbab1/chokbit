@@ -1,10 +1,10 @@
 import {useEffect,useState} from 'react';
+import {SecretField} from '../../components/SecretField';
 import {Select} from '../../components/Field';
 import type {CloudRecorder,GeneratedKeyRow} from '../../lib/cloud';
 function SavedKey({row,client}:{row:GeneratedKeyRow;client:CloudRecorder}){
- const [secret,setSecret]=useState<{privateKey:string;wifCompressed:string}|null>(null);const [busy,setBusy]=useState(false);const [error,setError]=useState('');
- async function reveal(){if(secret){setSecret(null);return}setBusy(true);setError('');try{setSecret(await client.reveal(row))}catch(e){setError(e instanceof Error?e.message:'Unable to reveal key')}finally{setBusy(false)}}
- return <details className="generated-history-row"><summary><strong>{new Date(row.generated_at).toLocaleString()}</strong><span>{row.network} · {row.id.slice(0,8)}</span><span>Generated only · 5 addresses</span></summary><div className="history-detail"><button className="secondary" disabled={busy} onClick={()=>void reveal()}>{busy?'Decrypting…':secret?'Hide key':'Reveal key'}</button>{error&&<p className="error" role="alert">{error}</p>}<dl><dt>Private key</dt><dd><code>{secret?.privateKey||'••••••••••••••••••••••••••••••••'}</code></dd><dt>WIF (compressed)</dt><dd><code>{secret?.wifCompressed||'••••••••••••••••••••••••••••••••'}</code></dd><dt>Public key</dt><dd><code>{row.public_key}</code></dd></dl>{row.addresses.map(a=><div className="address-value" key={a.format}><b>{a.format}</b><code>{a.address}</code></div>)}<p>Balance and transactions were not checked.</p></div></details>;
+ const [version,setVersion]=useState(0);
+ return <details className="generated-history-row" onToggle={e=>{if(!e.currentTarget.open)setVersion(n=>n+1)}}><summary><strong>{new Date(row.generated_at).toLocaleString()}</strong><span>{row.network} · {row.id.slice(0,8)}</span><span>Generated only · 5 addresses</span></summary><div className="history-detail"><dl><dt>Private key</dt><dd><SecretField key={'private-'+version} label="Private key" readValue={async()=>(await client.reveal(row)).privateKey}/></dd><dt>WIF (compressed)</dt><dd><SecretField key={'wif-'+version} label="WIF (compressed)" readValue={async()=>(await client.reveal(row)).wifCompressed}/></dd><dt>Public key</dt><dd><code>{row.public_key}</code></dd></dl>{row.addresses.map(a=><div className="address-value" key={a.format}><b>{a.format}</b><code>{a.address}</code></div>)}<p>Balance and transactions were not checked.</p></div></details>;
 }
 export function GeneratedOnlyHistory({client}:{client:CloudRecorder|null}){
  const [search,setSearch]=useState('');const [address,setAddress]=useState('');
